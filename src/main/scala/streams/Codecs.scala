@@ -1,15 +1,16 @@
 package streams
 
-import cats.effect.IO
+import cats.MonadThrow
 import fs2.Pipe
 import io.circe.jawn.decode
 import io.circe.syntax._
+import streams.Refinements.UnsafeString
 import streams.domain.Models.Core.{Customer, Order}
 import streams.domain.Models.Messages.{CustomerRequest, OrderRequest}
 
 /* Events which come into the program are *always* in raw bytes.
    Sometimes our libraries may hide that, converting them to Strings, Json, etc.,
-   but they are never well-typed scala classes that we want to use.
+   but they are never well-typed models that we want to use.
 
    Before we can process an event, we have to decode the bytes, which can always fail.
    We want to reject invalid messages and keep our models pure and clear.
@@ -25,18 +26,33 @@ import streams.domain.Models.Messages.{CustomerRequest, OrderRequest}
    - proto decoding
      - nested proto decoding
  */
+trait Codecs[F[_]] {
+  def decodeCustomerReq: Pipe[F, UnsafeString, CustomerRequest]
+  def encodeCustomer: Pipe[F, Option[Customer], UnsafeString]
+  def decodeOrderReq: Pipe[F, UnsafeString, OrderRequest]
+  def encodeOrder: Pipe[F, Option[Order], UnsafeString]
+}
 object Codecs {
-  // String is the type from/to which we decode/encode customer requests.
-  // Might not be the same for all requests/responses.
-  lazy val decodeCustomerReq: Pipe[IO, String, CustomerRequest] =
-    _.evalMap(v => IO.fromEither(decode[CustomerRequest](v)))
+  def apply[F[_]: MonadThrow]: Codecs[F] =
+    new Codecs[F] {
 
-  lazy val encodeCustomer: Pipe[IO, Option[Customer], String] =
-    _.evalMap(v => IO(v.asJson.noSpaces))
+      import Refinements._
 
-  lazy val decodeOrderReq: Pipe[IO, String, OrderRequest] =
-    _.evalMap(v => IO.fromEither(decode[OrderRequest](v)))
+      case class DecodingException(msg: ErrorMessage)
+          extends RuntimeException(msg)
 
-  lazy val encodeOrder: Pipe[IO, Option[Order], String] =
-    _.evalMap(v => IO(v.asJson.noSpaces))
+      // UnsafeString is the type from/to which we decode/encode customer requests.
+      // Might not be the same for all requests/responses.
+      lazy val decodeCustomerReq: Pipe[F, UnsafeString, CustomerRequest] =
+        _.evalMap(v => MonadThrow[F].fromEither(decode[CustomerRequest](v)))
+
+      lazy val encodeCustomer: Pipe[F, Option[Customer], UnsafeString] =
+        _.evalMap(v => MonadThrow[F].pure(v.asJson.noSpaces))
+
+      lazy val decodeOrderReq: Pipe[F, UnsafeString, OrderRequest] =
+        _.evalMap(v => MonadThrow[F].fromEither(decode[OrderRequest](v)))
+
+      lazy val encodeOrder: Pipe[F, Option[Order], UnsafeString] =
+        _.evalMap(v => MonadThrow[F].pure(v.asJson.noSpaces))
+    }
 }

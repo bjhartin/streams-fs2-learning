@@ -1,9 +1,18 @@
 package streams
 
-import cats.effect.IO
+import cats.Applicative
 import fs2.Stream
 
+trait Sinks[F[_]] {
+  def customerResponses: Stream[F, Unit]
+  def orderResponses: Stream[F, Unit]
+}
+
 object Sinks {
-  def customerResponses: Stream[IO, Unit] = ???
-  def orderResponses: Stream[IO, Unit] = ???
+  def apply[F[_]: Applicative](): Sinks[F] =
+    new Sinks[F] {
+      def customerResponses: Stream[F, Unit] =
+        Stream.eval(Applicative[F].pure(()))
+      def orderResponses: Stream[F, Unit] = Stream.eval(Applicative[F].pure(()))
+    }
 }

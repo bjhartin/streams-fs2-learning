@@ -2,29 +2,54 @@
 
 This is a learning project for my own use.
 
-There is documentation.  Start [here](./docs/startHere.md)
+## Ideas Demonstrated Here
 
-## A Different View
+### Streams of Events
 
-1. Our programs consist of functions executing within a type system, e.g. each function is an A => B, A => F[B], or similar.
+When the 'outside world' interacts with this app, via SQS, HTTP or other mechanism, this is modeled as events in a `Stream[F,A]`.  To process these, we map a function(s) over the streams.  Since streams are lazy and potentially infinite they are a good fit for modeling the outside world's interactions.  This means that 90% of the program is ignorant of whether we are using HTTP, SQS, etc.
 
-The compiler ensures that functions can't be called with, or return, the wrong types [1].
+#### Pipelines
 
-1. Most of our program is functions calling other functions, but sometimes the 'outside world' wants to call one of our functions, e.g. 
+For events that arrive, they flow through a `Pipe[F,A,B]` which encapsulates the ideas of:
 
-- POST /customers/123 is really the outside world wanting to call updateCustomer(c: Customer): F[Unit] 
-- Likewise for SQS messages and many other things, even the `main(args:String[])` method!
-- We often call these 'entry points'
+- Decoding the outside world's representation of some input type, e.g. `CustomerRequest` which is probably JSON from the outside world
+- Invoking the desired function in the domain, e.g. `CustomerRequest => F[Option[Customer]]`
+- Encoding the result, e.g. to JSON
 
-1. The entry points are special, and have something in common:
+This encoding/decoding is very important because this is where we avoid the 'messiness' of the outside world, e.g. we convert a message to our domain by:
 
-- Ultimately 
+- Using appropriate names and types
+- Discarding fields we don't care about
+- Deduplicating redundant fields
+- Modeling optional fields explicitly via `Option[A]`
 
+#### Codecs
 
+By making the encoding/decoding a central concept, we ensure we give thought to it.  This can reduce a lot of edge cases we otherwise must handle, e.g. without careful decoding we might have `Customer(a: Option[String], b: Option[String])` whereas we really want `Customer(name: Name, email: EmailAddress)` or similar.
 
-1 - Excluding nulls and exceptions and infinite loops, which functional progamming prohibits precisely because they break these rules.
+### Refinement Types
 
-## TODO:
+Instead of allowing unbounded and unrestricted types like `String` in our program, we use the `refined` library so we can write things like `type Name = String Refined AlphaNumeric And NonEmpty And MaxLength[25]`.  Now we can write `Customer(name: Name, ...)`.  Since many attacks involve string injection, we prevent this in the domain.  Why would we want to admit code into the name field?  We'll do similar things for types like `List` and others.  This will also make test data generation more accurate.
 
-- Use bracket for resources
-- 
+Types which represent input from the outside world will have less restrictions.
+
+Unrefined values are refined into these types via functions which represent failure in their return type.
+
+## TODO
+
+  - Finish refinement usage
+  - Resources
+  - Concurrency
+  - Observability
+  - Infrastructure
+  - Domain Arbitraries
+    - Related values
+  - Scalacheck
+  - Magnolia
+  - Buffering
+  - Interruptable
+    - Some operations must finish processing
+  - Check compile times
+  - Use two-level cache
+  - Prevent cache stampede
+

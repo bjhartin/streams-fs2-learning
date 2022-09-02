@@ -1,1 +1,1 @@
-package object streams {}
+package object streams

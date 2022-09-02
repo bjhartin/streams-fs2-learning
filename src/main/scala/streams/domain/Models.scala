@@ -7,32 +7,30 @@ import streams.domain.Models.Core.{CustomerId, OrderId}
 import io.circe
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.generic.auto._
+import io.circe.refined._
 import org.scalacheck.ScalacheckShapeless._
 import org.scalacheck.Arbitrary
 import org.scalacheck.derive.MkArbitrary
+import streams.Refinements._
+import streams.Refinements.Scalacheck._
 
 // Quick and dirty models and using Shapeless for auto-derivation which can be slow.
 object Models {
-  import streams.scalacheck.ArbitraryInstances._
 
   object Core {
     case class CustomerId(value: UUID)
-    case class Email(value: String)
-    case class Name(value: String)
-
     case class Customer(id: CustomerId, email: Email, name: Name)
 
     object Customer {
-      implicit val arb: Arbitrary[Customer] = MkArbitrary[Customer].arbitrary
-      implicit val dec: circe.Decoder[Customer] = deriveDecoder[Customer]
-      implicit val enc: circe.Encoder[Customer] = deriveEncoder[Customer]
+      implicit lazy val arb: Arbitrary[Customer] =
+        MkArbitrary[Customer].arbitrary
+      implicit lazy val dec: circe.Decoder[Customer] = deriveDecoder[Customer]
+      implicit lazy val enc: circe.Encoder[Customer] = deriveEncoder[Customer]
     }
 
     case class ItemId(value: UUID)
 
-    case class SKU(value: String)
-
-    case class PriceInUSD(float: Float)
+    case class PriceInUSD(float: Float) // TODO: Constrain price
 
     case class Item(id: ItemId, name: Name, sku: SKU, price: PriceInUSD)
 
