@@ -9,34 +9,30 @@ import eu.timepit.refined.boolean.And
 import eu.timepit.refined.collection.{MaxSize, NonEmpty}
 import eu.timepit.refined.string.MatchesRegex
 
-// Refinement types.  Not sure if these should go here or somewhere else.
+// Refinement types so we don't use unsafe types like String or unbounded lists, etc.
+// The main idea is that many attacks rely on injecting executable code fragments into Strings or
+// causing memory problems with oversize collectins.  Rather than sanitize input at various points,
+// we'll use types incapable of representing those things.  We'll use scalastyle rules to prevent the use
+// of the dangerous types in most places.
 object Refinements {
+  object Predicates {
+    private type AlphaNumeric = MatchesRegex[W.`"[a-zA-Z0-9_-]+"`.T]
+    // Best attempt at ensuring no code is injected.  We'll use more restrictive types when we can.
+    type SafeString = MaxSize[50] And MatchesRegex[
+      W.`"""[^\\(\\)\\{\\}\\[\\]\\!\\#\\$\\:\\;]"""`.T
+    ]
+    type Name = AlphaNumeric And NonEmpty And MaxSize[50]
+    type Email = NonEmpty And MaxSize[100] And MatchesRegex[
+      W.`"""[A-Za-z0-9]+@[A-Za-z0-9]+\\.[A-Za-z0-9]{2,3}"""`.T
+    ] // Probably needs enhanced.
+    type SKU = MatchesRegex[W.`"""[A-Z0-9]{20}"""`.T]
+  }
+
   type UnsafeString = String
-  type AlphaNumeric = MatchesRegex[W.`"[a-zA-Z0-9_-]+"`.T]
-  type AlphaNumericNonEmpty = AlphaNumeric And NonEmpty
-  type AlphaNumericNonEmptyMaxSize[N] =
-    AlphaNumericNonEmpty And MaxSize[N] //Size[Interval.Closed[_0, N]]
-  type NameRestrictions = AlphaNumericNonEmptyMaxSize[50]
-  type ErrorMessageRestrictions = AlphaNumericNonEmptyMaxSize[100]
-  // Probably needs enhanced.
-  type EmailRestrictions = NonEmpty And MaxSize[100] And MatchesRegex[
-    W.`"""[A-Za-z0-9]+@[A-Za-z0-9]+\\.[A-Za-z0-9]{2,3}"""`.T
-  ]
-  type SKURestrictions = MatchesRegex[
-    W.`"""[A-Z0-9]{20}"""`.T
-  ]
-  type ArgumentRestrictions = AlphaNumericNonEmptyMaxSize[25]
-  type JsonMessageRestrictions =
-    AlphaNumericJSON And MaxSize[
-      1000
-    ] And NonEmpty // Would need expanding in real world
-  type AlphaNumericJSON =
-    MatchesRegex[W.`"""[\\{\\}\\[\\]\\" \\t\\n,=a-zA-Z0-9_]+"""`.T]
-  type JsonMessageString = UnsafeString Refined JsonMessageRestrictions
-  type Email = UnsafeString Refined EmailRestrictions
-  type Name = UnsafeString Refined NameRestrictions
-  type ErrorMessage = UnsafeString Refined ErrorMessageRestrictions
-  type SKU = UnsafeString Refined SKURestrictions
+  type Email = UnsafeString Refined Predicates.Email
+  type Name = UnsafeString Refined Predicates.Name
+  type SKU = UnsafeString Refined Predicates.SKU
+  type SafeString = UnsafeString Refined Predicates.SafeString
 
   case class RefinementException(msg: UnsafeString)
       extends RuntimeException(msg)

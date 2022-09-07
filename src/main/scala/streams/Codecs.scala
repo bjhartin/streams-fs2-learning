@@ -28,9 +28,9 @@ import streams.domain.Models.Messages.{CustomerRequest, OrderRequest}
  */
 trait Codecs[F[_]] {
   def decodeCustomerReq: Pipe[F, UnsafeString, CustomerRequest]
-  def encodeCustomer: Pipe[F, Option[Customer], UnsafeString]
+  def encodeCustomerResp: Pipe[F, Option[Customer], UnsafeString]
   def decodeOrderReq: Pipe[F, UnsafeString, OrderRequest]
-  def encodeOrder: Pipe[F, Option[Order], UnsafeString]
+  def encodeOrderResp: Pipe[F, Option[Order], UnsafeString]
 }
 object Codecs {
   def apply[F[_]: MonadThrow]: Codecs[F] =
@@ -38,21 +38,20 @@ object Codecs {
 
       import Refinements._
 
-      case class DecodingException(msg: ErrorMessage)
+      case class DecodingException(msg: SafeString)
           extends RuntimeException(msg)
 
-      // UnsafeString is the type from/to which we decode/encode customer requests.
-      // Might not be the same for all requests/responses.
+      // UnsafeString might not be the eventual type here.
       lazy val decodeCustomerReq: Pipe[F, UnsafeString, CustomerRequest] =
         _.evalMap(v => MonadThrow[F].fromEither(decode[CustomerRequest](v)))
 
-      lazy val encodeCustomer: Pipe[F, Option[Customer], UnsafeString] =
+      lazy val encodeCustomerResp: Pipe[F, Option[Customer], UnsafeString] =
         _.evalMap(v => MonadThrow[F].pure(v.asJson.noSpaces))
 
       lazy val decodeOrderReq: Pipe[F, UnsafeString, OrderRequest] =
         _.evalMap(v => MonadThrow[F].fromEither(decode[OrderRequest](v)))
 
-      lazy val encodeOrder: Pipe[F, Option[Order], UnsafeString] =
+      lazy val encodeOrderResp: Pipe[F, Option[Order], UnsafeString] =
         _.evalMap(v => MonadThrow[F].pure(v.asJson.noSpaces))
     }
 }

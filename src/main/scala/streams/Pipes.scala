@@ -5,8 +5,8 @@ import fs2.Pipe
 import streams.Refinements.UnsafeString
 
 trait Pipes[F[_]] {
-  def orderReqPipe: Pipe[F, UnsafeString, UnsafeString]
-  def customerReqPipe: Pipe[F, UnsafeString, UnsafeString]
+  def orderReqPipe: Pipe[F, UnsafeString, Unit]
+  def customerReqPipe: Pipe[F, UnsafeString, Unit]
 }
 
 /*
@@ -19,15 +19,17 @@ trait Pipes[F[_]] {
 object Pipes {
   def apply[F[_]: Sync](
       processing: Processing[F],
-      codecs: Codecs[F]
+      codecs: Codecs[F],
+      sinks: Sinks[F]
   ): Pipes[F] =
     new Pipes[F] {
-      def orderReqPipe: Pipe[F, UnsafeString, UnsafeString] = { stream =>
+      def orderReqPipe: Pipe[F, UnsafeString, Unit] = { stream =>
         stream
           .through(codecs.decodeOrderReq)
           .evalTap(println)
           .through(processing.processOrderRequest)
-          .through(codecs.encodeOrder)
+          .through(codecs.encodeOrderResp)
+          .through(sinks.orderResponses)
       }
 
       //  // Doing it without pipes.
@@ -36,15 +38,16 @@ object Pipes {
       //      .evalMap { s => IO(s.length) }
       //      .evalMap { i => IO(i + 1) }
 
-      def customerReqPipe: Pipe[F, UnsafeString, UnsafeString] = { stream =>
+      def customerReqPipe: Pipe[F, UnsafeString, Unit] = { stream =>
         stream
           .evalTap(println)
           .through(codecs.decodeCustomerReq)
           .evalTap(println)
           .through(processing.processCustomerRequest)
           .evalTap(println)
-          .through(codecs.encodeCustomer)
+          .through(codecs.encodeCustomerResp)
           .evalTap(println)
+          .through(sinks.customerResponses)
       }
 
       private def println[A](a: A): F[Unit] =

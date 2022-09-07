@@ -4,8 +4,8 @@ object CommonSettings {
   import sbt.Keys._
 
   val projectSettings = Seq(
-    organization := "com.deere.streaming_data",
-    name := "sbt-core"
+    organization := "com.bjhartin",
+    name := "streams-fs2-learning"
   )
 
   lazy val javaSettings = Seq(

@@ -2,7 +2,7 @@ package streams.hardening
 
 import cats.implicits._
 import cats.effect.Async
-import streams.Refinements.{NameRestrictions, _}
+import streams.Refinements._
 import streams.hardening.Retries.retried
 
 /*
@@ -25,7 +25,7 @@ class Hardening[F[_]: Async](metrics: Metrics[F], cacheing: Cacheing[F]) {
     a: A =>
       for {
         cachedLabel <-
-          refineF[UnsafeString, NameRestrictions, F](s"${label}_cached")
+          refineF[UnsafeString, Predicates.Name, F](s"${label}_cached")
         uncached = retried(timed(label)(f))(Async[F], cfg)
         hardened = timed(cachedLabel)(cached(uncached))
         result <- hardened(a)

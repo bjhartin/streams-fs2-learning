@@ -1,6 +1,7 @@
-package streams
+package streams.impl.io
 
 import org.scalatest.Inside.inside
+import streams.AsyncFunSpec
 import streams.Refinements.RefinementException
 
 class IOMainTest extends AsyncFunSpec {

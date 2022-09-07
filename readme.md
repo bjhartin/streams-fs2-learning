@@ -38,13 +38,20 @@ Unrefined values are refined into these types via functions which represent fail
 ## TODO
 
   - Finish refinement usage
-  - Resources
-  - Concurrency
+  - Get github actions/terraform/aws pipeline working
+    - Deploys main to ecs task
+      - https://github.com/actions/starter-workflows/blob/main/deployments/aws.yml
+      - https://github.com/actions/starter-workflows/blob/main/deployments/terraform.yml
+  - Logging
+  - Error handling/recovery/retry
+  - SQS
+  - Manage resources via cats' Resource
   - Observability
-  - Infrastructure
+    - Where to publish metrics (cloudwatch, probably)
+    - Where to visualize metrics (cloudwatch, possibly grafana later)
   - Domain Arbitraries
     - Related values
-  - Scalacheck
+  - Property-based testing
   - Magnolia
   - Buffering
   - Interruptable
@@ -52,4 +59,3 @@ Unrefined values are refined into these types via functions which represent fail
   - Check compile times
   - Use two-level cache
   - Prevent cache stampede
-

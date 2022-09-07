@@ -2,13 +2,6 @@ package streams.hardening
 
 import cats.implicits._
 import cats.effect.Sync
-import eu.timepit.refined.api.Refined
-import streams.Refinements._
-
-object Cache {
-  type Key = UnsafeString Refined NameRestrictions
-  type Value = UnsafeString Refined NameRestrictions
-}
 
 // TODO: The CacheClient would be in terms of a Key and Value type (likely string or bytes)
 // and not a specific A and B.  We'll need to ensure codecs are present.

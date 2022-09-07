@@ -1,4 +1,4 @@
-package streams
+package streams.examples
 
 // Scala Stream is deprecated in favor of LazyList
 object ExampleScalaStreams {

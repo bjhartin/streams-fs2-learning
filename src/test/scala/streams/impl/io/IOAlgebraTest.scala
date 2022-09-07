@@ -1,12 +1,12 @@
-package streams.impl
+package streams.impl.io
 
 import java.util.UUID
 
 import streams.AsyncFunSpec
 import streams.domain.Models.Core.{CustomerId, OrderId}
 
-class ArbitraryIOAlgebraTest extends AsyncFunSpec {
-  val algebra = ArbitraryIOAlgebra()
+class IOAlgebraTest extends AsyncFunSpec {
+  val algebra = IOAlgebra()
 
   it("should get a customer") {
     algebra.getCustomer(CustomerId(UUID.randomUUID())).map { c =>
