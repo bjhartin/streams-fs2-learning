@@ -12,11 +12,15 @@ import streams.hardening.Retries.retried
     loadShedding / backPressure
  */
 
-class Hardening[F[_]: Async](metrics: Metrics[F], cacheing: Cacheing[F]) {
+class Hardening[F[_]: Async](
+    metrics: Metrics[F],
+    cacheing: Cacheing[F],
+    chaos: Chaos[F]
+) {
   import metrics._
   import cacheing._
+  import chaos._
 
-  // TODO: CacheClient doesn't need to know about A/B.
   def hardened[A, B](
       label: Name
   )(
@@ -27,7 +31,9 @@ class Hardening[F[_]: Async](metrics: Metrics[F], cacheing: Cacheing[F]) {
         cachedLabel <-
           refineF[UnsafeString, Predicates.Name, F](s"${label}_cached")
         uncached = retried(timed(label)(f))(Async[F], cfg)
-        hardened = timed(cachedLabel)(cached(uncached))
+        failurePercentage <- refineF[Float, Predicates.Percentage, F](0.05f)
+        hardened =
+          chaotic(failurePercentage)(timed(cachedLabel)(cached(uncached)))
         result <- hardened(a)
       } yield result
   }

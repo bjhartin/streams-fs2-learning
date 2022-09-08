@@ -6,28 +6,23 @@ import streams.AsyncFunSpec
 
 class HardeningTest extends AsyncFunSpec {
   import Metrics._
-  import RetryConfig._
 
   private implicit val mb = metricsBuilder
-  private implicit val cacheHitClient: Cache[Int, Int, IO] =
+  private def cache(result: Option[Int]): Cache[Int, Int, IO] =
     new Cache[Int, Int, IO] {
-      override def get(a: Int): IO[Option[Int]] = IO.pure(Some(1))
+      override def get(a: Int): IO[Option[Int]] = IO.pure(result)
       override def put(a: Int, b: Int): IO[Unit] = IO.pure(())
     }
 
-  val cacheMissClient = new Cache[Int, Int, IO] {
-    override def get(a: Int): IO[Option[Int]] = IO.pure(None)
-    override def put(a: Int, b: Int): IO[Unit] = IO.pure(())
-  }
-  private val cacheing = new Cacheing[IO]
-  private val metrics = new Metrics[IO]
-  private val hardening = new Hardening[IO](metrics, cacheing)
+  private val metrics = Metrics[IO]
+  private val hardening = new Hardening[IO](metrics, Cacheing[IO], Chaos[IO])
   private val function = { i: Int =>
     IO.delay(Some(i))
   }
-  private val hardenedFunction = hardening.hardened("function")(function)
 
   it("should apply timing to a function") {
+    val hardenedFunction = hardening
+      .hardened("function")(function)(RetryConfig.default, cache(Some(1)))
     for {
       result <- hardenedFunction(1)
       cachedTimer <- metrics.getTimer("function_cached")
@@ -41,7 +36,7 @@ class HardeningTest extends AsyncFunSpec {
   it("should apply timing to both the cached and uncached function") {
     val hardenedFunction =
       hardening
-        .hardened("function2")(function)(RetryConfig.default, cacheMissClient)
+        .hardened("function2")(function)(RetryConfig.default, cache(None))
 
     for {
       result <- hardenedFunction(1)
@@ -67,7 +62,7 @@ class HardeningTest extends AsyncFunSpec {
     }
     val hardenedFunction =
       hardening
-        .hardened("function3")(function)(RetryConfig.default, cacheMissClient)
+        .hardened("function3")(function)(RetryConfig.default, cache(None))
 
     for {
       result <- hardenedFunction(1).attempt

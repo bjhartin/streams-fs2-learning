@@ -2,11 +2,11 @@ package streams
 
 import cats.ApplicativeThrow
 import cats.implicits._
-import cats.effect.Sync
 import eu.timepit.refined._
 import eu.timepit.refined.api.{Refined, Validate}
 import eu.timepit.refined.boolean.And
 import eu.timepit.refined.collection.{MaxSize, NonEmpty}
+import eu.timepit.refined.numeric.{Less, NonNegative}
 import eu.timepit.refined.string.MatchesRegex
 
 // Refinement types so we don't use unsafe types like String or unbounded lists, etc.
@@ -26,6 +26,7 @@ object Refinements {
       W.`"""[A-Za-z0-9]+@[A-Za-z0-9]+\\.[A-Za-z0-9]{2,3}"""`.T
     ] // Probably needs enhanced.
     type SKU = MatchesRegex[W.`"""[A-Z0-9]{20}"""`.T]
+    type Percentage = NonNegative And Less[100]
   }
 
   type UnsafeString = String
@@ -33,7 +34,7 @@ object Refinements {
   type Name = UnsafeString Refined Predicates.Name
   type SKU = UnsafeString Refined Predicates.SKU
   type SafeString = UnsafeString Refined Predicates.SafeString
-
+  type Percentage = Float Refined Predicates.Percentage
   case class RefinementException(msg: UnsafeString)
       extends RuntimeException(msg)
 
@@ -43,10 +44,15 @@ object Refinements {
     refineV[B](value)
       .leftMap(RefinementException)
 
-  def refineF[A, B, F[_]: Sync](
+  def refineString[A](value: String)(implicit
+      ev: Validate[String, A]
+  ): Either[RefinementException, String Refined A] =
+    refine[String, A](value)
+
+  def refineF[A, B, F[_]: ApplicativeThrow](
       value: A
   )(implicit ev: Validate[A, B]): F[A Refined B] =
-    Sync[F].fromEither(refine[A, B](value))
+    ApplicativeThrow[F].fromEither(refine[A, B](value))
 
   def refineStringF[B, F[_]: ApplicativeThrow](
       value: UnsafeString
@@ -64,6 +70,7 @@ object Refinements {
 
     // Unfortunately we have to duplicate the constraints above when we generate values through ScalaCheck.
     // For simple cases, e.g. String Refined NonEmpty, this isn't the case, but for MatchesRegexp or MaxSize, we do.
+    // It might be possible to drive this from MatchesRegex.
 
     implicit lazy val unsafeArbName: Arbitrary[Name] = Arbitrary(
       unsafeGenRegexp("[a-zA-Z0-9_-]{1,50}")
@@ -84,7 +91,8 @@ object Refinements {
     )
 
     // I'm not sure if this can be made safe.  Gen's .sample method returns Option,
-    // so it seems like it should be possible.
+    // so it seems like it should be possible, but so far I've not seen how to leverage
+    // that when I have an Option.
     private def unsafeGenRegexp[A](
         regexp: UnsafeString
     )(implicit ev: Validate[UnsafeString, A]): Gen[UnsafeString Refined A] =

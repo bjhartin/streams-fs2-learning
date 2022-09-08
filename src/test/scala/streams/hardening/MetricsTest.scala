@@ -11,7 +11,7 @@ class MetricsTest extends AsyncFunSpec {
   import Metrics._
 
   private implicit val mb = metricsBuilder
-  private val metrics = new Metrics[IO]
+  private val metrics = Metrics[IO]
   private val timedFunction: Unit => IO[Unit] =
     metrics.timed("name") { _ => IO.sleep(100 millis) }
 

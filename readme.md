@@ -42,8 +42,8 @@ Unrefined values are refined into these types via functions which represent fail
     - Deploys main to ecs task
       - https://github.com/actions/starter-workflows/blob/main/deployments/aws.yml
       - https://github.com/actions/starter-workflows/blob/main/deployments/terraform.yml
-  - Logging
-  - Error handling/recovery/retry
+  - Logging / log publishing
+  - Error handling/recovery/retry  
   - SQS
   - Manage resources via cats' Resource
   - Observability
@@ -59,3 +59,6 @@ Unrefined values are refined into these types via functions which represent fail
   - Check compile times
   - Use two-level cache
   - Prevent cache stampede
+  - Hardening, continued
+    - Feature toggle
+    - Chaos
