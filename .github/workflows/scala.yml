@@ -28,16 +28,9 @@ jobs:
     needs: build
     steps:
       - uses: actions/checkout@v3
-      - name: Install Terraform
-        env:
-          TERRAFORM_VERSION: "0.12.15"
-        run: |
-#          tf_version=$TERRAFORM_VERSION
-#          wget https://releases.hashicorp.com/terraform/"$tf_version"/terraform_"$tf_version"_linux_amd64.zip
-#          unzip terraform_"$tf_version"_linux_amd64.zip
-#          sudo mv terraform /usr/local/bin/
-          cd src/main/terraform
-
+      - name: Change to working dir
+        run: cd src/main/terraform
+        
       - name: Verify Terraform version
         run: terraform --version
 
