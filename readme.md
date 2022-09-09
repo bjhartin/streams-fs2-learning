@@ -59,6 +59,4 @@ Unrefined values are refined into these types via functions which represent fail
   - Check compile times
   - Use two-level cache
   - Prevent cache stampede
-  - Hardening, continued
-    - Feature toggle
-    - Chaos
+  - Contract (AsyncAPI?)

@@ -16,8 +16,8 @@ object Cache {
   // TODO: TTL
   def inMemory[A, B, F[_]: Sync]: Cache[A, B, F] =
     new Cache[A, B, F] {
-      // Yes, it's a var, but it's access is wrapped in effects, just like any other data store.
-      private var inMemoryCache: TrieMap[A, B] = TrieMap.empty[A, B]
+      // Yes, it's mutable, but it's access is wrapped in effects, just like any other data store.
+      private val inMemoryCache: TrieMap[A, B] = TrieMap.empty[A, B]
       override def get(a: A): F[Option[B]] =
         Sync[F].delay { inMemoryCache.get(a) }
       override def put(a: A, b: B): F[Unit] =
