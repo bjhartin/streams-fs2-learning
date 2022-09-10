@@ -20,7 +20,7 @@ jobs:
         java-version: '11'
         distribution: 'temurin'
         cache: 'sbt'
-    - name: Run tests
+    - name: Run tests and build image
       run: sbt test docker
 
   terraform_apply:

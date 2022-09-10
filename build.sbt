@@ -1,6 +1,22 @@
 addCompilerPlugin("io.tryp" % "splain" % "1.0.1" cross CrossVersion.patch)
 enablePlugins(DockerPlugin)
 
+
+docker / dockerfile := {
+  // The assembly task generates a fat JAR file
+  val artifact: File = assembly.value
+  val artifactTargetPath = s"/app/${artifact.name}"
+
+  new Dockerfile {
+    from("openjdk:11-jre")
+    add(artifact, artifactTargetPath)
+    entryPoint("java", "-jar", artifactTargetPath)
+  }
+}
+
+docker / buildOptions := BuildOptions(cache = false)
+
+
 val circeVersion = "0.14.1"
 lazy val streamsFs2Learning =
   (project in file("."))
@@ -8,7 +24,6 @@ lazy val streamsFs2Learning =
       CommonSettings.projectSettings,
       CommonSettings.javaSettings,
       CommonSettings.scalaSettings,
-      docker / dockerfile := NativeDockerfile(file("src") / "main" / "docker" / "Dockerfile"),
       libraryDependencies ++=
         Seq(
           "co.fs2" %% "fs2-core" % "3.2.12",
