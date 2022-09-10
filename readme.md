@@ -39,9 +39,12 @@ Unrefined values are refined into these types via functions which represent fail
 
   - Finish refinement usage
   - Get github actions/terraform/aws pipeline working
-    - Deploys main to ecs task
-      - https://github.com/actions/starter-workflows/blob/main/deployments/aws.yml
-      - https://github.com/actions/starter-workflows/blob/main/deployments/terraform.yml
+    - Need terraform resources to create ECS task, other things
+    - Need to publish app as container to ECR
+      - sbt-docker
+    - Need sqs queues
+    - Need IAM policies/roles
+
   - Logging / log publishing
   - Error handling/recovery/retry  
   - SQS
