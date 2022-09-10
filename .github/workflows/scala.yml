@@ -41,10 +41,8 @@ jobs:
 
       - name: Terraform validation
         run: terraform validate
+        working-directory: ./src/main/terraform
 
       - name: Terraform plan
-        run: |
-          pwd
-          ls -al
-          terraform plan -input=false
+        run: terraform plan -input=false
         working-directory: ./src/main/terraform  
