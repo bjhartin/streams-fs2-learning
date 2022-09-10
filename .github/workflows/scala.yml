@@ -42,7 +42,7 @@ jobs:
       - name: Terraform validation
         run: terraform validate
         working-directory: ./src/main/terraform
-
-      - name: Terraform plan
-        run: terraform plan -input=false
+ 
+      - name: Terraform apply
+        run: terraform apply -auto-approve -input=false
         working-directory: ./src/main/terraform  
