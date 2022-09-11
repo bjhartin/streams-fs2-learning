@@ -42,8 +42,8 @@ jobs:
       run: |
         # Build a docker container and push it to ECR 
         echo "Pushing image to ECR ($ECR_REGISTRY/$ECR_REPOSITORY)..."
-        docker images | grep bjhartin
-        docker push com.bjhartin/streams-fs2-learning:latest
+        docker tag com.bjhartin/streams-fs2-learning:latest $ECR_REGISTRY/$ECR_REPOSITORY:latest
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
         echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:com.bjhartin/streams-fs2-learning/$IMAGE_TAG"    
 
   terraform_apply:
