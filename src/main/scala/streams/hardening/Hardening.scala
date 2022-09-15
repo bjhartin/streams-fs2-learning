@@ -2,9 +2,21 @@ package streams.hardening
 
 import cats.implicits._
 import cats.effect.Async
+import streams.Cache
 import streams.Refinements._
-import streams.hardening.Retries.retried
+import streams.hardening.Retries.RetryConfig
 
+trait Hardening[F[_]] {
+  def hardened[A, B](
+      label: Name
+  )(
+      f: A => F[Option[B]]
+  )(implicit
+      cfg: RetryConfig,
+      cc: Cache[A, B, F],
+      fp: FailurePercentage
+  ): A => F[Option[B]]
+}
 /*
   Others to include:
 
@@ -12,29 +24,37 @@ import streams.hardening.Retries.retried
     loadShedding / backPressure
  */
 
-class Hardening[F[_]: Async](
-    metrics: Metrics[F],
-    cacheing: Cacheing[F],
-    chaos: Chaos[F]
-) {
-  import metrics._
-  import cacheing._
-  import chaos._
+object Hardening {
+  def apply[F[_]: Async](
+      metrics: Metrics[F],
+      cacheing: Cacheing[F],
+      retries: Retries[F],
+      chaos: Chaos[F]
+  ): Hardening[F] =
+    new Hardening[F] {
 
-  def hardened[A, B](
-      label: Name
-  )(
-      f: A => F[Option[B]]
-  )(implicit cfg: RetryConfig, cc: Cache[A, B, F]): A => F[Option[B]] = {
-    a: A =>
-      for {
-        cachedLabel <-
-          refineF[UnsafeString, Predicates.Name, F](s"${label}_cached")
-        uncached = retried(timed(label)(f))(Async[F], cfg)
-        failurePercentage <- refineF[Float, Predicates.Percentage, F](0.05f)
-        hardened =
-          chaotic(failurePercentage)(timed(cachedLabel)(cached(uncached)))
-        result <- hardened(a)
-      } yield result
-  }
+      import metrics._
+      import cacheing._
+      import chaos._
+      import retries._
+
+      def hardened[A, B](
+          label: Name
+      )(
+          f: A => F[Option[B]]
+      )(implicit
+          cfg: RetryConfig,
+          cc: Cache[A, B, F],
+          failurePercentage: FailurePercentage
+      ): A => F[Option[B]] = { a: A =>
+        for {
+          cachedLabel <- refineStringF[Predicates.Name, F](
+            s"${label}_cached"
+          ) // Have to refine to append
+          uncached = retried(timed(label)(f))(cfg)
+          hardened = (timed(cachedLabel)(cached(chaotic(uncached))))
+          result <- hardened(a)
+        } yield result
+      }
+    }
 }

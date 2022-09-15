@@ -2,12 +2,14 @@ package streams.hardening
 
 import cats.effect.{IO, Sync}
 import eu.timepit.refined.auto._
-import streams.AsyncFunSpec
+import streams.hardening.Retries.RetryConfig
+import streams.{AsyncFunSpec, Cache}
 
 class HardeningTest extends AsyncFunSpec {
   import Metrics._
 
   private implicit val mb = metricsBuilder
+  private implicit val fp = FailurePercentage(0f)
   private def cache(result: Option[Int]): Cache[Int, Int, IO] =
     new Cache[Int, Int, IO] {
       override def get(a: Int): IO[Option[Int]] = IO.pure(result)
@@ -15,14 +17,15 @@ class HardeningTest extends AsyncFunSpec {
     }
 
   private val metrics = Metrics[IO]
-  private val hardening = new Hardening[IO](metrics, Cacheing[IO], Chaos[IO])
+  private val hardening =
+    Hardening[IO](metrics, Cacheing[IO], Retries[IO], Chaos[IO])
   private val function = { i: Int =>
     IO.delay(Some(i))
   }
 
   it("should apply timing to a function") {
     val hardenedFunction = hardening
-      .hardened("function")(function)(RetryConfig.default, cache(Some(1)))
+      .hardened("function")(function)(RetryConfig.default, cache(Some(1)), fp)
     for {
       result <- hardenedFunction(1)
       cachedTimer <- metrics.getTimer("function_cached")
@@ -36,7 +39,7 @@ class HardeningTest extends AsyncFunSpec {
   it("should apply timing to both the cached and uncached function") {
     val hardenedFunction =
       hardening
-        .hardened("function2")(function)(RetryConfig.default, cache(None))
+        .hardened("function2")(function)(RetryConfig.default, cache(None), fp)
 
     for {
       result <- hardenedFunction(1)
@@ -62,7 +65,7 @@ class HardeningTest extends AsyncFunSpec {
     }
     val hardenedFunction =
       hardening
-        .hardened("function3")(function)(RetryConfig.default, cache(None))
+        .hardened("function3")(function)(RetryConfig.default, cache(None), fp)
 
     for {
       result <- hardenedFunction(1).attempt

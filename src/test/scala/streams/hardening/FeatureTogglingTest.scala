@@ -2,11 +2,8 @@ package streams.hardening
 
 import cats.effect.IO
 import streams.AsyncFunSpec
-import streams.hardening.FeatureToggles.{
-  FeatureToggleResult,
-  ToggledOff,
-  ToggledOn
-}
+import streams.hardening.FeatureToggling.FeatureToggles
+import streams.hardening.FeatureToggling.FeatureToggles._
 
 class FeatureTogglingTest extends AsyncFunSpec {
   it("should wrap a function with feature toggling") {

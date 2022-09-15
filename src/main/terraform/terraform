@@ -7,6 +7,12 @@ docker run -it --rm \
 	-e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
 	-e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
 	-e AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION \
+	-e TF_VAR_aws_account_id=$TF_VAR_aws_account_id \
+	-e TF_VAR_aws-secret-key=$AWS_SECRET_ACCESS_KEY \
+        -e TF_VAR_aws-access-key=$AWS_ACCESS_KEY_ID \
+	-e TF_VAR_aws-region=$AWS_DEFAULT_REGION \
+	-e TF_VAR_region=$AWS_DEFAULT_REGION \
+        -e AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION \
         -v $(pwd):/root/terraform \
 	-w /root/terraform \
 	hashicorp/terraform $@

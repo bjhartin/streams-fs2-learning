@@ -1,10 +1,9 @@
 package streams
 
+import cats.implicits._
 import cats.MonadThrow
-import fs2.Pipe
 import io.circe.jawn.decode
 import io.circe.syntax._
-import streams.Refinements.UnsafeString
 import streams.domain.Models.Core.{Customer, Order}
 import streams.domain.Models.Messages.{CustomerRequest, OrderRequest}
 
@@ -27,10 +26,10 @@ import streams.domain.Models.Messages.{CustomerRequest, OrderRequest}
      - nested proto decoding
  */
 trait Codecs[F[_]] {
-  def decodeCustomerReq: Pipe[F, UnsafeString, CustomerRequest]
-  def encodeCustomerResp: Pipe[F, Option[Customer], UnsafeString]
-  def decodeOrderReq: Pipe[F, UnsafeString, OrderRequest]
-  def encodeOrderResp: Pipe[F, Option[Order], UnsafeString]
+  def decodeCustomerReq(req: Event): F[CustomerRequest]
+  def encodeCustomerResp(resp: Option[Customer]): F[Response]
+  def decodeOrderReq(req: Event): F[OrderRequest]
+  def encodeOrderResp(resp: Option[Order]): F[Response]
 }
 object Codecs {
   def apply[F[_]: MonadThrow]: Codecs[F] =
@@ -41,17 +40,30 @@ object Codecs {
       case class DecodingException(msg: SafeString)
           extends RuntimeException(msg)
 
-      // UnsafeString might not be the eventual type here.
-      lazy val decodeCustomerReq: Pipe[F, UnsafeString, CustomerRequest] =
-        _.evalMap(v => MonadThrow[F].fromEither(decode[CustomerRequest](v)))
+      override def decodeCustomerReq(req: Event): F[CustomerRequest] =
+        MonadThrow[F]
+          .fromEither(decode[CustomerRequest](req.content))
+          .handleErrorWith { e =>
+            println(e)
+            MonadThrow[F].raiseError[CustomerRequest](e)
+          }
 
-      lazy val encodeCustomerResp: Pipe[F, Option[Customer], UnsafeString] =
-        _.evalMap(v => MonadThrow[F].pure(v.asJson.noSpaces))
+      override def encodeCustomerResp(resp: Option[Customer]): F[Response] =
+        MonadThrow[F].pure(
+          Response(Response.CustomerResponse, resp.asJson.noSpaces)
+        )
 
-      lazy val decodeOrderReq: Pipe[F, UnsafeString, OrderRequest] =
-        _.evalMap(v => MonadThrow[F].fromEither(decode[OrderRequest](v)))
+      override def decodeOrderReq(req: Event): F[OrderRequest] =
+        MonadThrow[F]
+          .fromEither(decode[OrderRequest](req.content))
+          .handleErrorWith { e =>
+            println(e)
+            MonadThrow[F].raiseError[OrderRequest](e)
+          }
 
-      lazy val encodeOrderResp: Pipe[F, Option[Order], UnsafeString] =
-        _.evalMap(v => MonadThrow[F].pure(v.asJson.noSpaces))
+      override def encodeOrderResp(resp: Option[Order]): F[Response] =
+        MonadThrow[F].pure(
+          Response(Response.OrderResponse, resp.asJson.noSpaces)
+        )
     }
 }
