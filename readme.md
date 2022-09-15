@@ -54,7 +54,8 @@ Unrefined values are refined into these types via functions which represent fail
     - Create the ECS task    
     - Need IAM policies/roles
   - Logging / log publishing
-  - Error handling/recovery/retry  
+  - Error handling
+    - Should encoding accomodate errors (I think so - think http 500/400)  
   - SQS
   - Manage resources via cats' Resource
   - Observability

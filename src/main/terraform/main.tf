@@ -22,6 +22,10 @@ module "bootstrap" {
   dynamo_db_table_name        = "aws-locks"
 }
 
+resource "aws_ecr_repository" "repo" {
+  name = "repo"
+}
+
 module "vpc" {
   source             = "./modules/vpc"
   name               = var.name
@@ -32,6 +36,11 @@ module "vpc" {
   environment        = var.environment
 }
 
-resource "aws_ecr_repository" "repo" {
-  name = "repo"
+module "security_groups" {
+  source         = "./modules/security-groups"
+  name           = var.name
+  vpc_id         = module.vpc.id
+  environment    = var.environment
+  container_port = var.container_port
 }
+

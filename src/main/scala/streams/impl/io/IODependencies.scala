@@ -30,7 +30,7 @@ object IODependencies {
       import RetryConfig.default
       implicit val metricsBuilder: MetricBuilder = Metrics.metricsBuilder
       implicit val failurePercentage: FailurePercentage =
-        FailurePercentage(0.1f)
+        FailurePercentage(25f)
       implicit val customerCache: Cache[CustomerRequest, Customer, IO] =
         Cache.inMemory[CustomerRequest, Customer, IO]
       implicit val orderCache: Cache[OrderRequest, Order, IO] =

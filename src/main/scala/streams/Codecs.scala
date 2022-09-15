@@ -4,6 +4,7 @@ import cats.implicits._
 import cats.MonadThrow
 import io.circe.jawn.decode
 import io.circe.syntax._
+import streams.Response.ResponseType
 import streams.domain.Models.Core.{Customer, Order}
 import streams.domain.Models.Messages.{CustomerRequest, OrderRequest}
 
@@ -27,9 +28,9 @@ import streams.domain.Models.Messages.{CustomerRequest, OrderRequest}
  */
 trait Codecs[F[_]] {
   def decodeCustomerReq(req: Event): F[CustomerRequest]
-  def encodeCustomerResp(resp: Option[Customer]): F[Response]
+  def encodeCustomerResp(resp: Either[Throwable, Option[Customer]]): F[Response]
   def decodeOrderReq(req: Event): F[OrderRequest]
-  def encodeOrderResp(resp: Option[Order]): F[Response]
+  def encodeOrderResp(resp: Either[Throwable, Option[Order]]): F[Response]
 }
 object Codecs {
   def apply[F[_]: MonadThrow]: Codecs[F] =
@@ -44,26 +45,42 @@ object Codecs {
         MonadThrow[F]
           .fromEither(decode[CustomerRequest](req.content))
           .handleErrorWith { e =>
-            println(e)
             MonadThrow[F].raiseError[CustomerRequest](e)
           }
 
-      override def encodeCustomerResp(resp: Option[Customer]): F[Response] =
-        MonadThrow[F].pure(
-          Response(Response.CustomerResponse, resp.asJson.noSpaces)
-        )
+      override def encodeCustomerResp(
+          resp: Either[Throwable, Option[Customer]]
+      ): F[Response] =
+        resp match {
+          case Left(err) =>
+            MonadThrow[F].pure(
+              Response(ResponseType.Failure, err.toString)
+            )
+          case Right(resp) =>
+            MonadThrow[F].pure(
+              Response(ResponseType.Success, resp.asJson.noSpaces)
+            )
+        }
 
       override def decodeOrderReq(req: Event): F[OrderRequest] =
         MonadThrow[F]
           .fromEither(decode[OrderRequest](req.content))
           .handleErrorWith { e =>
-            println(e)
             MonadThrow[F].raiseError[OrderRequest](e)
           }
 
-      override def encodeOrderResp(resp: Option[Order]): F[Response] =
-        MonadThrow[F].pure(
-          Response(Response.OrderResponse, resp.asJson.noSpaces)
-        )
+      override def encodeOrderResp(
+          resp: Either[Throwable, Option[Order]]
+      ): F[Response] =
+        resp match {
+          case Left(err) =>
+            MonadThrow[F].pure(
+              Response(ResponseType.Failure, err.toString)
+            )
+          case Right(resp) =>
+            MonadThrow[F].pure(
+              Response(ResponseType.Success, resp.asJson.noSpaces)
+            )
+        }
     }
 }
