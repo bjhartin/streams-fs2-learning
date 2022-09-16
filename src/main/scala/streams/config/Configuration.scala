@@ -5,7 +5,6 @@ import cats.implicits._
 import eu.timepit.refined.pureconfig._
 import pureconfig._
 import pureconfig.generic.semiauto._
-import pureconfig.generic.auto._
 import pureconfig.error.ConfigReaderFailures
 import streams.Refinements.Name
 

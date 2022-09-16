@@ -1,7 +1,6 @@
 addCompilerPlugin("io.tryp" % "splain" % "1.0.1" cross CrossVersion.patch)
 enablePlugins(DockerPlugin)
 
-
 docker / dockerfile := {
   // The assembly task generates a fat JAR file
   val artifact: File = assembly.value
@@ -16,8 +15,8 @@ docker / dockerfile := {
 
 docker / buildOptions := BuildOptions(cache = false)
 
-
 val circeVersion = "0.14.1"
+val http4sVersion = "0.23.16"
 lazy val streamsFs2Learning =
   (project in file("."))
     .settings(
@@ -28,6 +27,13 @@ lazy val streamsFs2Learning =
         Seq(
           "co.fs2" %% "fs2-core" % "3.2.12",
           "co.fs2" %% "fs2-io" % "3.2.12",
+          "org.http4s" %% "http4s-dsl" % http4sVersion,
+//          "org.http4s" %% "http4s-blaze-core" % http4sVersion,
+//          "org.http4s" %% "http4s-blaze-server" % http4sVersion,
+//          "org.http4s" %% "http4s-blaze-client" % http4sVersion,
+          "org.http4s" %% "http4s-ember-core" % http4sVersion,
+          "org.http4s" %% "http4s-ember-server" % http4sVersion,
+          "org.http4s" %% "http4s-ember-client" % http4sVersion,
           "io.circe" %% "circe-core" % circeVersion,
           "io.circe" %% "circe-generic" % circeVersion,
           "io.circe" %% "circe-generic-extras" % circeVersion,

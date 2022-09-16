@@ -1,7 +1,7 @@
 package streams.hardening
 
 import cats.effect.{IO, Sync}
-import eu.timepit.refined.auto._
+import streams.Refinements.{Predicates, refineF, refineStringF}
 import streams.hardening.Retries.RetryConfig
 import streams.{AsyncFunSpec, Cache}
 
@@ -9,7 +9,7 @@ class HardeningTest extends AsyncFunSpec {
   import Metrics._
 
   private implicit val mb = metricsBuilder
-  private implicit val fp = FailurePercentage(0f)
+  private implicit val fp = refineF[Float, Predicates.Percentage, IO](0f)
   private def cache(result: Option[Int]): Cache[Int, Int, IO] =
     new Cache[Int, Int, IO] {
       override def get(a: Int): IO[Option[Int]] = IO.pure(result)
@@ -24,11 +24,15 @@ class HardeningTest extends AsyncFunSpec {
   }
 
   it("should apply timing to a function") {
-    val hardenedFunction = hardening
-      .hardened("function")(function)(RetryConfig.default, cache(Some(1)), fp)
     for {
+      p <- fp.map(FailurePercentage)
+      name <- refineStringF[Predicates.Name, IO]("function1")
+      cachedName <- refineStringF[Predicates.Name, IO]("function1_cached")
+      hardenedFunction =
+        hardening
+          .hardened(name)(function)(RetryConfig.default, cache(Some(1)), p)
       result <- hardenedFunction(1)
-      cachedTimer <- metrics.getTimer("function_cached")
+      cachedTimer <- metrics.getTimer(cachedName)
     } yield {
       assert(result.contains(1))
       assert(cachedTimer.getCount == 1)
@@ -37,14 +41,15 @@ class HardeningTest extends AsyncFunSpec {
   }
 
   it("should apply timing to both the cached and uncached function") {
-    val hardenedFunction =
-      hardening
-        .hardened("function2")(function)(RetryConfig.default, cache(None), fp)
-
     for {
+      p <- fp.map(FailurePercentage)
+      name <- refineStringF[Predicates.Name, IO]("function2")
+      hardenedFunction =
+        hardening
+          .hardened(name)(function)(RetryConfig.default, cache(None), p)
       result <- hardenedFunction(1)
-      timer <- metrics.getTimer("function2")
-      cachedTimer <- metrics.getTimer("function2_cached")
+      timer <- metrics.getTimer(name)
+      cachedTimer <- metrics.getTimer(name)
     } yield {
       assert(result.contains(1))
       assert(cachedTimer.getCount == 1)
@@ -63,11 +68,12 @@ class HardeningTest extends AsyncFunSpec {
           IO.raiseError[Option[Int]](BOOM)
         }
     }
-    val hardenedFunction =
-      hardening
-        .hardened("function3")(function)(RetryConfig.default, cache(None), fp)
-
     for {
+      p <- fp.map(FailurePercentage)
+      name <- refineStringF[Predicates.Name, IO]("function3")
+      hardenedFunction =
+        hardening
+          .hardened(name)(function)(RetryConfig.default, cache(None), p)
       result <- hardenedFunction(1).attempt
     } yield {
       assert(result.isLeft)

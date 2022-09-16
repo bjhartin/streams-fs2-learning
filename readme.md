@@ -56,7 +56,7 @@ Unrefined values are refined into these types via functions which represent fail
   - Logging / log publishing
   - Error handling
     - Should encoding accomodate errors (I think so - think http 500/400)  
-  - SQS
+  - SQS  
   - Manage resources via cats' Resource
   - Observability
     - Where to publish metrics (cloudwatch, probably)
@@ -73,4 +73,5 @@ Unrefined values are refined into these types via functions which represent fail
   - Prevent cache stampede
   - Contract (AsyncAPI?)
   - Refinement tweaks
+  - Enlarge the concept of Processor to be parameterized on request/response, so that it can be used in HTTP4s
 

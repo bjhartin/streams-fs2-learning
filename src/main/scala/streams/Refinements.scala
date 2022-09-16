@@ -11,7 +11,7 @@ import eu.timepit.refined.string.MatchesRegex
 
 // Refinement types so we don't use unsafe types like String or unbounded lists, etc.
 // The main idea is that many attacks rely on injecting executable code fragments into Strings or
-// causing memory problems with oversize collectins.  Rather than sanitize input at various points,
+// causing memory problems with oversize collections.  Rather than sanitize input at various points,
 // we'll use types incapable of representing those things.  We'll use scalastyle rules to prevent the use
 // of the dangerous types in most places.
 object Refinements {
@@ -27,12 +27,14 @@ object Refinements {
     ] // Probably needs enhanced.
     type SKU = MatchesRegex[W.`"""[A-Z0-9]{20}"""`.T]
     type Percentage = NonNegative And Less[100]
+    type Price = NonNegative And Less[10000]
   }
 
   type UnsafeString = String
   type Email = UnsafeString Refined Predicates.Email
   type Name = UnsafeString Refined Predicates.Name
   type SKU = UnsafeString Refined Predicates.SKU
+  type Price = Float Refined Predicates.Price
   type SafeString = UnsafeString Refined Predicates.SafeString
   type Percentage = Float Refined Predicates.Percentage
   case class RefinementException(msg: UnsafeString)
@@ -54,10 +56,10 @@ object Refinements {
   )(implicit ev: Validate[A, B]): F[A Refined B] =
     ApplicativeThrow[F].fromEither(refine[A, B](value))
 
-  def refineStringF[B, F[_]: ApplicativeThrow](
+  def refineStringF[A, F[_]: ApplicativeThrow](
       value: UnsafeString
-  )(implicit ev: Validate[UnsafeString, B]): F[UnsafeString Refined B] =
-    ApplicativeThrow[F].fromEither(refine[UnsafeString, B](value))
+  )(implicit ev: Validate[UnsafeString, A]): F[UnsafeString Refined A] =
+    ApplicativeThrow[F].fromEither(refine[UnsafeString, A](value))
 
   implicit def refinedStringToString[A](
       s: UnsafeString Refined A
@@ -88,6 +90,12 @@ object Refinements {
 
     implicit lazy val arbString: Arbitrary[UnsafeString] = Arbitrary(
       Gen.alphaNumStr
+    )
+
+    implicit val arbPrice: Arbitrary[Price] = Arbitrary(
+      Gen.posNum[Float].map { f =>
+        refine[Float, Predicates.Price](f).toTry.get
+      }
     )
 
     // I'm not sure if this can be made safe.  Gen's .sample method returns Option,

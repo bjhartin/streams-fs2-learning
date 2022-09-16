@@ -7,21 +7,34 @@ import streams.config.Configuration
 import streams.{Pipeline, Sinks, Sources}
 
 object IOMain extends IOApp {
-  // Can't do anything about the UnsafeString (String here since this signature is dictated to us.
-  // However, first step could be to refine those strings.
-  override def run(args: List[UnsafeString]): IO[ExitCode] =
+  override def run(args: List[UnsafeString]): IO[ExitCode] = {
     for {
       _ <- refineArgs(args)
       _ <- Configuration.load // Don't need config yet.
       dependencies <- IODependencies.wireDependencies
-      stream <- createStream(
+      evtStream = eventHandlingStream(
         dependencies.routing,
         dependencies.sinks,
         dependencies.sources
       )
+      httpStream = dependencies.httpServer
+      combined =
+        httpStream.merge(
+          evtStream
+        ) // Possibly not the best way to run two unrelated streams.
+      result <- dispose(combined)
     } yield {
-      stream
+      result
     }
+  }
+
+  private def dispose(str: fs2.Stream[IO, Unit]): IO[ExitCode] = {
+    str.attempt.compile.last
+      .map {
+        case Some(Left(err)) => throw err
+        case _               => ExitCode.Success
+      }
+  }
 
   // Fails on the first argument that fails refinement.  Could do better.
   private def refineArgs(args: List[UnsafeString]): IO[List[SafeString]] =
@@ -29,12 +42,11 @@ object IOMain extends IOApp {
       .map(refineStringF[Predicates.SafeString, IO])
       .sequence
 
-  // Creates a single stream
-  private def createStream(
+  private def eventHandlingStream(
       pipeline: Pipeline[IO],
       sinks: Sinks[IO],
       sources: Sources[IO]
-  ): IO[ExitCode] = {
+  ): fs2.Stream[IO, Unit] = {
     fs2
       .Stream(
         sources.events
@@ -42,12 +54,5 @@ object IOMain extends IOApp {
           .through(sinks.responses)
       )
       .parJoin(maxOpen = 10)
-      .attempt
-      .compile
-      .last
-      .map {
-        case Some(Left(err)) => throw err
-        case _               => ExitCode.Success
-      }
   }
 }

@@ -5,8 +5,8 @@ import java.util.UUID
 
 import streams.domain.Models.Core.{CustomerId, OrderId}
 import io.circe
+import io.circe.{Decoder, Encoder}
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
-import io.circe.generic.auto._
 import io.circe.refined._
 import org.scalacheck.ScalacheckShapeless._
 import org.scalacheck.Arbitrary
@@ -19,6 +19,12 @@ object Models {
 
   object Core {
     case class CustomerId(value: UUID)
+    object CustomerId {
+      implicit val decCustomerId: Decoder[CustomerId] =
+        deriveDecoder[CustomerId]
+      implicit val encCustomerId: Encoder[CustomerId] =
+        deriveEncoder[CustomerId]
+    }
     case class Customer(id: CustomerId, email: Email, name: Name)
 
     object Customer {
@@ -29,10 +35,12 @@ object Models {
     }
 
     case class ItemId(value: UUID)
+    object ItemId {
+      implicit val encItemId: Encoder[ItemId] = deriveEncoder[ItemId]
+      implicit val decItemId: Decoder[ItemId] = deriveDecoder[ItemId]
+    }
 
-    case class PriceInUSD(float: Float) // TODO: Constrain price
-
-    case class Item(id: ItemId, name: Name, sku: SKU, price: PriceInUSD)
+    case class Item(id: ItemId, name: Name, sku: SKU, price: Price)
 
     object Item {
       implicit val arb: Arbitrary[Item] = MkArbitrary[Item].arbitrary
@@ -41,8 +49,18 @@ object Models {
     }
 
     case class OrderId(value: UUID)
+    object OrderId {
+      implicit val encOrderId: Encoder[OrderId] = deriveEncoder[OrderId]
+      implicit val decOrderId: Decoder[OrderId] = deriveDecoder[OrderId]
+    }
 
     case class DatePlaced(value: Instant)
+    object DatePlaced {
+      implicit val encDatePlaced: Encoder[DatePlaced] =
+        deriveEncoder[DatePlaced]
+      implicit val decDatePlaced: Decoder[DatePlaced] =
+        deriveDecoder[DatePlaced]
+    }
 
     case class Order(
         id: OrderId,
