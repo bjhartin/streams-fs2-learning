@@ -37,11 +37,6 @@ variable "availability_zones" {
   default     = ["us-east-1a", "us-east-1b"]
 }
 
-//variable "application-secrets" {
-//  description = "A map of secrets that is passed into the application. Formatted like ENV_VAR = VALUE"
-//  type        = map
-//}
-
 variable "cidr" {
   description = "The CIDR block for the VPC."
   default     = "10.0.0.0/16"

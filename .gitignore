@@ -9,3 +9,5 @@
 .bloop/
 .bsp/
 **/.terraform
+**/terraform-new
+**/secrets.tfvars

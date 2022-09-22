@@ -53,25 +53,21 @@ Unrefined values are refined into these types via functions which represent fail
   - Get github actions/terraform/aws pipeline working
     - Create the ECS task    
     - Need IAM policies/roles
-  - Logging / log publishing
-  - Error handling
-    - Should encoding accomodate errors (I think so - think http 500/400)  
-  - SQS  
-  - Manage resources via cats' Resource
+  - Logging / log publishing    
   - Observability
     - Where to publish metrics (cloudwatch, probably)
     - Where to visualize metrics (cloudwatch, possibly grafana later)
+    - thread observation (jmx?)
+  - SQS
+  - Enlarge the concept of Processor to be parameterized on request/response, so that it can be used in HTTP4s
+  - Contract (AsyncAPI?)
+  - Use two-level cache
+  - Buffering
   - Domain Arbitraries
     - Related values
-  - Property-based testing
   - Magnolia
-  - Buffering
   - Interruptable
     - Some operations must finish processing
-  - Check compile times
-  - Use two-level cache
   - Prevent cache stampede
-  - Contract (AsyncAPI?)
-  - Refinement tweaks
-  - Enlarge the concept of Processor to be parameterized on request/response, so that it can be used in HTTP4s
+  - Property-based testing
 

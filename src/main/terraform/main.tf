@@ -22,10 +22,6 @@ module "bootstrap" {
   dynamo_db_table_name        = "aws-locks"
 }
 
-resource "aws_ecr_repository" "repo" {
-  name = "repo"
-}
-
 module "vpc" {
   source             = "./modules/vpc"
   name               = var.name
@@ -53,4 +49,33 @@ module "alb" {
   alb_security_groups = [module.security_groups.alb]
   //  alb_tls_cert_arn    = var.tsl_certificate_arn
   health_check_path   = "/health/check"
+}
+
+module "ecr" {
+  source                      = "./modules/ecr"
+  name                        = var.name
+  environment                 = var.environment
+}
+
+module "ecs" {
+  source                      = "./modules/ecs"
+  name                        = var.name
+  environment                 = var.environment
+  region                      = var.aws-region
+  subnets                     = module.vpc.private_subnets
+  aws_alb_target_group_arn    = module.alb.aws_alb_target_group_arn
+  ecs_service_security_groups = [module.security_groups.ecs_tasks]
+  container_port              = var.container_port
+  container_cpu               = var.container_cpu
+  container_memory            = var.container_memory
+  service_desired_count       = var.service_desired_count
+  container_environment = [
+    { name = "LOG_LEVEL",
+      value = "DEBUG" },
+    { name = "PORT",
+      value = var.container_port }
+  ]
+  container_image = local.image
+  container_secrets = []
+  container_secrets_arns = ""
 }
