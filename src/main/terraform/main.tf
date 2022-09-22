@@ -51,11 +51,12 @@ module "alb" {
   health_check_path   = "/health/check"
 }
 
-module "ecr" {
-  source                      = "./modules/ecr"
-  name                        = var.name
-  environment                 = var.environment
-}
+# I created this in a different way
+#module "ecr" {
+#  source                      = "./modules/ecr"
+#  name                        = var.name
+#  environment                 = var.environment
+#}
 
 module "ecs" {
   source                      = "./modules/ecs"
