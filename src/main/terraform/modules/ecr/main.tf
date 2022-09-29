@@ -1,5 +1,5 @@
 resource "aws_ecr_repository" "main" {
-  name                 = "repo" # This is leftover from a poor choice I made - fix later.
+  name                 = "${var.name}" # This is leftover from a poor choice I made - fix later.
 }
 
 resource "aws_ecr_lifecycle_policy" "main" {

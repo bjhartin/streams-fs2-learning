@@ -1,5 +1,5 @@
 locals {
-  image       = "${var.aws_account_id}.dkr.ecr.us-east-1.amazonaws.com/repo"
+  image       = "${var.aws_account_id}.dkr.ecr.us-east-1.amazonaws.com/${var.name}"
 }
 
 variable "name" {

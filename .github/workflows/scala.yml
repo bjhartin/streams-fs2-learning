@@ -36,7 +36,7 @@ jobs:
       id: build-image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: repo
+        ECR_REPOSITORY: streams-fs2-learning
       run: |
         # Build a docker container and push it to ECR 
         echo "Pushing image to ECR ($ECR_REGISTRY/$ECR_REPOSITORY)..."
