@@ -32,18 +32,18 @@ jobs:
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
 
-    - name: Publish image to ECR
-      id: build-image
-      env:
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: streams-fs2-learning
-      run: |
-        # Build a docker container and push it to ECR 
-        echo "Pushing image to ECR ($ECR_REGISTRY/$ECR_REPOSITORY)..."
-        docker tag com.bjhartin/streams-fs2-learning:latest $ECR_REGISTRY/$ECR_REPOSITORY:latest
-        docker images
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
-        echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:latest"    
+#    - name: Publish image to ECR
+#      id: build-image
+#      env:
+#        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+#        ECR_REPOSITORY: streams-fs2-learning
+#      run: |
+#        # Build a docker container and push it to ECR
+#        echo "Pushing image to ECR ($ECR_REGISTRY/$ECR_REPOSITORY)..."
+#        docker tag com.bjhartin/streams-fs2-learning:latest $ECR_REGISTRY/$ECR_REPOSITORY:latest
+#        docker images
+#        docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+#        echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:latest"
 
   terraform_apply:
     runs-on: ubuntu-latest
