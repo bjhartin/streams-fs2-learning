@@ -14,7 +14,7 @@ variable "environment" {
 
 variable "domain" {
   description = "The domain by which services will be reached"
-  default = "bjhartin.com"
+  default = "www.bjhartin.com"
 }
 
 variable "region" {
