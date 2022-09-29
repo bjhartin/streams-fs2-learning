@@ -36,6 +36,21 @@ resource "aws_alb_target_group" "main" {
   }
 }
 
+provider "aws" {
+  alias = "acm"
+  region = "us-east-1"
+}
+
+resource "aws_acm_certificate" "default" {
+  provider = aws.acm
+  domain_name = var.domain
+  subject_alternative_names = ["*.${var.domain}"]
+  validation_method = "DNS"
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
 # Redirect to https listener
 resource "aws_alb_listener" "http" {
   load_balancer_arn = aws_lb.main.id
@@ -54,19 +69,19 @@ resource "aws_alb_listener" "http" {
 }
 
 # Redirect traffic to target group
-//resource "aws_alb_listener" "https" {
-//    load_balancer_arn = aws_lb.main.id
-//    port              = 443
-//    protocol          = "HTTPS"
-//
-//    ssl_policy        = "ELBSecurityPolicy-2016-08"
-//    certificate_arn   = var.alb_tls_cert_arn
-//
-//    default_action {
-//        target_group_arn = aws_alb_target_group.main.id
-//        type             = "forward"
-//    }
-//}
+resource "aws_alb_listener" "https" {
+    load_balancer_arn = aws_lb.main.id
+    port              = 443
+    protocol          = "HTTPS"
+
+    ssl_policy        = "ELBSecurityPolicy-2016-08"
+    certificate_arn   = aws_acm_certificate.default.arn
+
+    default_action {
+        target_group_arn = aws_alb_target_group.main.id
+        type             = "forward"
+    }
+}
 
 output "aws_alb_target_group_arn" {
   value = aws_alb_target_group.main.arn

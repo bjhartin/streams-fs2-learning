@@ -12,6 +12,11 @@ variable "environment" {
   default     = "prod"
 }
 
+variable "domain" {
+  description = "The domain by which services will be reached"
+  default = "bjhartin.com"
+}
+
 variable "region" {
   description = "the AWS region in which resources are created, you must set the availability_zones variable as well if you define this value to something other than the default"
 }
@@ -76,7 +81,3 @@ variable "health_check_path" {
   description = "Http path for task health check"
   default     = "/health"
 }
-
-//variable "tsl_certificate_arn" {
-//  description = "The ARN of the certificate that the ALB uses for https"
-//}
