@@ -39,8 +39,6 @@ By making the encoding/decoding a central concept, we ensure we give thought to 
 
 Instead of allowing unbounded and unrestricted types like `String` in our program, we use the `refined` library so we can write things like `type Name = String Refined AlphaNumeric And NonEmpty And MaxLength[25]`.  Now we can write `Customer(name: Name, ...)`.  Since many attacks involve string injection, we prevent this in the domain.  Why would we want to admit code into the name field?  We'll do similar things for types like `List` and others.  This will also make test data generation more accurate.
 
-Types which represent input from the outside world will have less restrictions.
-
 Unrefined values are refined into these types via functions which represent failure in their return type.
 
 ## Attributions
