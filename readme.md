@@ -20,8 +20,9 @@ The outside world wants to invoke some `A => F[B]`, so we must:
 - Choose the appropriate function, determining the types involved - some `A => F[B]`.
 - Decode the `A` from their request.  _This can fail_.
   - Past this point we shouldn't see errors related to invalid events and all values are well-typed and appropriate.
-- Invoke the function, hopefully getting a `B` (or failure).
-- _Encode the B_ for the outside world's consumption.  Usually, this can't fail.
+- Invoke the function, hopefully getting an `F[B]` (which may represent a failure).
+- _Encode the F[B]_ for the outside world's consumption.  Usually, this can't fail.
+  - Note we encode the `F[B]` and not just the `B`.  A failure might be an HTTP 400, for example.
 
 This encoding/decoding is very important because this is where we avoid the 'messiness' of the outside world, e.g. we convert a message to our domain by:
 
