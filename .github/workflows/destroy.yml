@@ -47,5 +47,5 @@ jobs:
         working-directory: ./src/main/terraform
 
       - name: Terraform destroy
-        run: terraform destroy
+        run: terraform apply -input=false -auto-approve
         working-directory: ./src/main/terraform
