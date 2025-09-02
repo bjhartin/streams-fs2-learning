@@ -38,6 +38,9 @@ jobs:
       TF_VAR_aws-secret-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       TF_VAR_aws-access-key: ${{ secrets.AWS_ACCESS_KEY_ID }}
     steps:
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
       - uses: actions/checkout@v3
       - name: Verify Terraform version
         run: terraform --version
